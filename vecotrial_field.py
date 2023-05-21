@@ -57,23 +57,35 @@ class MyVectorField(Scene):
     }
     def construct(self):
         charges=self.get_charges(12)
+        vectorial_field=self.get_force_field(charges)
         self.play(Create(charges),**self.CONFIG['anim_kwargs'])
-        self.wait()
+        self.play(Create(vectorial_field),**self.CONFIG['anim_kwargs'])
+        def update_vector_field(vectorial_field):
+            new_field=self.get_force_field(charges)
+            vectorial_field.become(new_field)
+        def update_particles(particles, dt):
+            func=vectorial_field.func
+            for particle in particles:
+                # particle.center[0]+=np.sin(dt)
+                particle.center[1]+=np.cos(dt)
+                particle.shift(particle.center*dt)
+        vectorial_field.add_updater(update_vector_field)
+        charges.add_updater(update_particles)
+        self.wait(1)
     def get_charges(self,amount):
         positions = np.array([
             [
-                config['frame_width']/2*np.random.uniform(-1,1),
-                config['frame_height']/2*np.random.uniform(-1,1),
+                t,
+                0,
                 0
             ]
-            for _ in range(amount)
+            for t in np.linspace(0, config['frame_width'], amount)
         ])
         charges = VGroup()
         colors = it.cycle(self.CONFIG['colors'])
-        for position in positions:
+        for position,i in zip(positions, it.count()):
             color = next(colors)
-            valor=np.random.choice([True,False])
-            if valor:
+            if i%2==0:
                 atributte=True
             else:
                 atributte=False
@@ -89,7 +101,19 @@ class MyVectorField(Scene):
                 np.random.uniform(0,2*np.pi)
             )
             charges.add(charge)
+        charges.center()
         return charges
-            
-                
-        
+    def get_force_field(self,charges):
+        func = my_func(
+            *list(zip(list(map(
+                lambda x: x.get_center(),
+                charges
+            )),
+            [charge.carga for charge in charges],
+                      )),
+            **self.CONFIG['charge_kwargs']
+        )
+        vector_field = ArrowVectorField(func)
+        return vector_field
+    def curve_guide(self, dx):
+        pass

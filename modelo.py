@@ -115,3 +115,4 @@ class MiVectorField(Scene):
         #     func, x_range=[-7, 7, 1], y_range=[-4, 4, 1], length_func=lambda x: x / 2
         # )
         return vector_field
+
